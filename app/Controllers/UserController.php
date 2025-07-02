@@ -24,7 +24,7 @@ class UserController extends ResourceController
 
     public function create()
     {
-        $data = $this->request->getJSON(true);
+        $data = $this->request->getPost();
         if (!$this->model->insert($data)) {
             return $this->failValidationErrors($this->model->errors());
         }
@@ -33,11 +33,11 @@ class UserController extends ResourceController
 
     public function update($id = null)
     {
-        $data = $this->request->getJSON(true);
-        if (!$this->model->update($id, $data)) {
-            return $this->failValidationErrors($this->model->errors());
-        }
-        return $this->respond($data);
+    $data = $this->request->getRawInput(); // Ambil semua input PUT
+    if (!$this->model->update($id, $data)) {
+        return $this->failValidationErrors($this->model->errors());
+    }
+    return $this->respond($data);
     }
 
     public function delete($id = null)

@@ -12,8 +12,9 @@ class PropertyModel extends Model
     protected $returnType       = \App\Entities\Property::class;
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['description', 'nama_kamar', 'harga',
-        'status', 'alamat', 'user_id'];
+    protected $allowedFields    = [
+        'description','nama_kamar','harga','status','alamat','user_id','foto',
+        ];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -36,31 +37,32 @@ class PropertyModel extends Model
         'status'      => 'required|in_list[0,1]', // misal: 0=tidak tersedia, 1=tersedia
         'alamat'      => 'required|string',
         'user_id'     => 'required|integer|is_not_unique[user.user_id]',
+        'foto'        => 'permit_empty',
     ];
         
     protected $validationMessages   = [
-        'nama' => [
-            'required'    => 'Nama property wajib diisi',
-            'min_length'  => 'Nama minimal 3 karakter',
-            'max_length'  => 'Nama maksimal 100 karakter',
+        'description' => [
+        'required' => 'Deskripsi wajib diisi.',
         ],
-        'alamat' => [
-            'required'    => 'Alamat wajib diisi',
-            'min_length'  => 'Alamat terlalu pendek',
+        'nama_kamar' => [
+        'required'   => 'Nama kamar wajib diisi.',
+        'max_length' => 'Nama kamar maksimal 100 karakter.',
         ],
         'harga' => [
-            'required'        => 'Harga wajib diisi',
-            'integer'         => 'Harga harus berupa angka',
-            'greater_than'    => 'Harga harus lebih dari 0',
+        'required' => 'Harga wajib diisi.',
+        'integer'  => 'Harga harus berupa angka.',
         ],
-        'tipe' => [
-            'required'    => 'Tipe property wajib diisi',
-            'in_list'     => 'Tipe hanya boleh: Kost, Hotel, Villa, Apartment',
+        'status' => [
+        'required' => 'Status wajib diisi.',
+        'in_list'  => 'Status harus 0 (tidak tersedia) atau 1 (tersedia).',
+        ],
+        'alamat' => [
+        'required' => 'Alamat wajib diisi.',
         ],
         'user_id' => [
-            'required'           => 'User ID wajib diisi',
-            'is_natural_no_zero' => 'User ID harus bilangan bulat positif',
-        ]
+        'required'     => 'User ID wajib diisi.',
+        'is_not_unique'=> 'User ID tidak ditemukan di tabel user.',
+        ],
     ];
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;

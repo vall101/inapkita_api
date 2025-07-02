@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Controllers;
+
 use App\Models\PropertyModel;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
@@ -15,62 +16,54 @@ class PropertyController extends ResourceController
         return $this->respond($this->model->findAll());
     }
 
-    /**
-     * Return the properties of a resource object.
-     *
-     * @param int|string|null $id
-     *
-     * @return ResponseInterface
-     */
     public function show($id = null)
     {
         $data = $this->model->find($id);
         return $data ? $this->respond($data) : $this->failNotFound("Property not found");
     }
 
-    /**
-     * Return a new resource object, with default properties.
-     *
-     * @return ResponseInterface
-     */
-    public function new()
-    {
-        //
-    }
-
-    /**
-     * Create a new resource object, from "posted" parameters.
-     *
-     * @return ResponseInterface
-     */
     public function create()
     {
-        $data = $this->request->getJSON(true);
+        $data = $this->request->getPost();
+
+        if (!$data || !is_array($data)) {
+            return $this->failValidationErrors([
+                'message' => 'Data tidak boleh kosong.',
+                'required_fields' => [
+                    'description', 'nama_kamar', 'harga', 'status', 'alamat', 'user_id', 'foto'
+                ]
+            ]);
+        }
+
+        // Ambil file foto
+        $foto = $this->request->getFile('foto');
+        if ($foto && $foto->isValid() && !$foto->hasMoved()) {
+            $newName = $foto->getRandomName();
+
+            // Simpan ke writable/uploads
+            $foto->move(WRITEPATH . 'uploads', $newName);
+
+            // Salin ke public/uploads agar bisa diakses dari Flutter/browser
+            if (!is_dir(FCPATH . 'uploads')) {
+                mkdir(FCPATH . 'uploads', 0777, true); // Buat folder jika belum ada
+            }
+            copy(WRITEPATH . 'uploads/' . $newName, FCPATH . 'uploads/' . $newName);
+
+            // Simpan URL lengkap di DB
+$data['foto'] = $newName; // jangan pakai base_url()
+
+        } else {
+            return $this->failValidationErrors(['foto' => 'Gambar tidak valid']);
+        }
+
+        // Simpan ke DB
         if (!$this->model->insert($data)) {
             return $this->failValidationErrors($this->model->errors());
         }
+
         return $this->respondCreated($data);
     }
 
-    /**
-     * Return the editable properties of a resource object.
-     *
-     * @param int|string|null $id
-     *
-     * @return ResponseInterface
-     */
-    public function edit($id = null)
-    {
-        //
-    }
-
-    /**
-     * Add or update a model resource, from "posted" properties.
-     *
-     * @param int|string|null $id
-     *
-     * @return ResponseInterface
-     */
     public function update($id = null)
     {
         $data = $this->request->getJSON(true);
@@ -80,13 +73,6 @@ class PropertyController extends ResourceController
         return $this->respond($data);
     }
 
-    /**
-     * Delete the designated resource object from the model.
-     *
-     * @param int|string|null $id
-     *
-     * @return ResponseInterface
-     */
     public function delete($id = null)
     {
         if (!$this->model->find($id)) {
